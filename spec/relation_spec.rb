@@ -2,7 +2,7 @@
 
 # typed: false
 
-describe Redcord::Relation do
+shared_examples :redcord_relation_tests do
   let(:klass) do
     Class.new(T::Struct) do
       include Redcord::Base
@@ -77,5 +77,21 @@ describe Redcord::Relation do
     expect(count).to eq 2
 
     expect(klass.where(a: 0).count).to eq 0
+  end
+end
+
+describe Redcord::Relation do
+  context '1 shard' do
+    include_examples :redcord_relation_tests
+  end
+
+  context '3 shards' do
+    before(:each) do
+      Redcord::Base.redis = Redcord::Redis.new(
+        cluster: (0...3).map { |i| {db: i} },
+      )
+    end
+
+    include_examples :redcord_relation_tests
   end
 end
